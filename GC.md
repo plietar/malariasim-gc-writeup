@@ -114,8 +114,8 @@ example. This means most of the garbage will be comprised of relatively young
 objects.
 
 [^4]: Not all programs conform to this pattern. The litterature contains many
-    many models of object lifetimes, often with fanciful names such as the
-    *radioactive decay model* or the *bathtub model*.
+    alternative models for object lifetimes, often with fanciful names such as
+    the *radioactive decay model* or the *bathtub model*.
 
 Generational garbage collectors exploit this fact by dividing objects into
 separate generations. The younger generations are traced frequently to avoid
