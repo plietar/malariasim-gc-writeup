@@ -71,7 +71,9 @@ x$data <- x$data * 2
 We can represent the abstract state of the memory after executing these two
 lines of code as a graph of variables and objects.
 
-![](fig.svg)
+<p align="center">
+<img src="fig.svg" width="400"/>
+</p>
 
 The `x` variable points to the new data frame at the bottom, while nothing
 points to the old one at the top. We say the old data frame is unreachable, and
