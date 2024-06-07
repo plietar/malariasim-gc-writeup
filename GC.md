@@ -159,7 +159,21 @@ execution time and garbage collection time, which we can get with `proc.time`
 and `gc.time` respectively, and compare these without the use of the profiler.
 
 ```R
-# include gctime.R
+library(malariasimulation)
+
+proc_start <- proc.time()[[3]]
+gc_start <- gc.time()[[3]]
+
+set.seed(123)
+parameters <- get_parameters(list(human_population=1e6))
+run_simulation(500, parameters)
+
+proc_elapsed <- proc.time()[[3]] - proc_start
+gc_elapsed <- gc.time()[[3]] - gc_start
+
+cat(sprintf("GC: %.2fs Total: %.2fs Relative: %.2f%%\n",
+            gc_elapsed, proc_elapsed,
+            gc_elapsed / proc_elapsed * 100))
 ```
 
 The `proc.time` and `gc.time` functions both return a vector with the "user",

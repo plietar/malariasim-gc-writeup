@@ -13,17 +13,18 @@
 
   outputs = { self, nixpkgs, reside, malariasimulation }:
     let
-      overlay = reside.lib.rPackagesOverlay (pkgs: _: prev: {
-        malariasimulation = prev.malariasimulation.overrideAttrs {
-          src = malariasimulation;
-          # pkgs.fetchFromGitHub {
-          #   owner = "mrc-ide";
-          #   repo = "malariasimulation";
-          #   rev = "fdd7c68d9e299fe806d2273a207d284f02b22abe";
-          #   hash = "sha256-Fxq7wr2cyPa+o7lM++MOfyf2lDfF/AoBWoFU7lxfreI=";
-          # };
-        };
-      });
+      overlay = reside.lib.rPackagesOverlay
+        (pkgs: _: prev: {
+          malariasimulation = prev.malariasimulation.overrideAttrs {
+            # src = malariasimulation;
+            src = pkgs.fetchFromGitHub {
+              owner = "mrc-ide";
+              repo = "malariasimulation";
+              rev = "fdd7c68d9e299fe806d2273a207d284f02b22abe";
+              hash = "sha256-Fxq7wr2cyPa+o7lM++MOfyf2lDfF/AoBWoFU7lxfreI=";
+            };
+          };
+        });
 
       pkgs = import nixpkgs {
         system = "x86_64-linux";
@@ -57,6 +58,7 @@
           pkgs.gperftools
           pkgs.pdf2svg
           pkgs.texlive.combined.scheme-full
+          pkgs.nodejs
         ];
       };
     };
