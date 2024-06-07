@@ -72,7 +72,9 @@ x$data <- x$data * 2
 We can represent the abstract state of the memory after executing these two
 lines of code as a graph of variables and objects.
 
+<p align="center">
 <img src="fig.svg" width="400"/>
+</p>
 
 The `x` variable on the left points to the new data frame created by the
 modification. Meanwhile, nothing points to the old data frame at the top (the
@@ -274,7 +276,9 @@ around that by running the simulation in a subprocess (using [the `callr`
 package][callr]) and do some regex work to extract the data. This gives us the
 plot below:
 
-<img src="gcinfo.png" width="680"/>
+<p align="center">
+<img src="gcinfo.png" width="800"/>
+</p>
 
 Each dot here represents a garbage collection cycle, and the color of it
 represents the level of garbage collection. The Y axis is the amount of vector
@@ -331,9 +335,20 @@ the percentage of `R_VSize` this represents. We could use this to derive
 roundings involved in printing the data. It is easy however to modify the R
 interpreter to add an extra line to include the `R_VSize` value in the output.
 
+----
+----
+----
+----
+
+This is where things stop making sense
+
 With [the modification applied][r-source.diff] and the R interpreter
 re-compiled, we can collect that value and add it to our garbage collection
-plot.
+plot:
+
+<p align="center">
+<img src="gcinfo-line.png" width="800"/>
+</p>
 
 
 It seems surprising that the garbage collector would allow us to repeatedly hit

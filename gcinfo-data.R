@@ -22,6 +22,7 @@ data_raw <- str_match_all(
   paste0(
     "Garbage collection (?<n>\\d*) = (?<level1>\\d*)\\+(?<level2>\\d*)\\+(?<level3>\\d*) \\(level (?<level>\\d)\\) \\.\\.\\. \n",
     "(?<ncells>[\\d.]*) Mbytes of cons cells used \\((?<cellspct>\\d*)%\\)\\n(?<nvectors>[\\d.]*) Mbytes of vectors used \\((?<vectorspct>\\d*)%\\)",
+    "(?:\nR_VSize=(?<vsize>\\d*) VHEAP_FREE=(?<vheapfree>\\d*))?",
     "|tick=(?<tick>[\\d-]+) elapsed=(?<time>[\\d.]+) rss=(?<rss>[\\d.]+) maxrss=(?<maxrss>[\\d.]+)"
   )
 )[[1]][,-1] %>% data.frame()
@@ -29,6 +30,8 @@ data_raw <- str_match_all(
 data <- data_raw %>%
   mutate(across(everything(), as.numeric)) %>%
   mutate(across(c(nvectors, ncells), ~ . * 1024*1024)) %>%
+  mutate(across(c(vsize, vheapfree), ~ . * 8)) %>%
+  
   #mutate(across(c(tick, time), na.approx)) %>%
   mutate(cells_total = ncells / cellspct * 100,
          vectors_total = nvectors / vectorspct * 100) %>%
@@ -40,13 +43,14 @@ ggplot(gcdata, aes(n)) +
   geom_point(aes(y=nvectors, colour=level)) +
   labs(x="GC Cycle", y="Vectors used", colour="Level") +
   ggplot2::scale_y_continuous(labels = scales::label_bytes())
-ggsave("gcinfo.png", width=15, scale=0.5)
+ggsave("gcinfo.png", width=20, scale=0.5)
 
 ggplot(gcdata, aes(n)) +
   geom_point(aes(y=nvectors, colour=level)) +
-  geom_line(aes(y=vectors_total), colour="black") +
-  geom_line(aes(y=0.8 * vectors_total), colour="black", linetype=2) +
+  geom_line(aes(y=vsize), colour="black") +
+  geom_line(aes(y=0.8 * vsize), colour="black", linetype=2) +
   ggplot2::scale_y_continuous(labels = scales::label_bytes())
+ggsave("gcinfo-line.png", width=20, scale=0.5)
 
 ggplot(gcdata, aes(tick)) +
   geom_point(data = ~ filter(., level == 0),
