@@ -33,16 +33,17 @@ allocated, the chunk cannot be used for another purpose.
 
 Unfortunately, computers only have a finite amount of memory, therefore if the
 program were to allocate chunks of memory forever it would quickly run out and
-terminate[^1]. For this reason, it is important that programs de-allocate chunks
+terminate[^OOM]. For this reason, it is important that programs de-allocate chunks
 they do not use anymore. Once a chunk has been deallocated, it can be re-used
 for another purpose.
 
-[^1]: What should happen when the system runs out of memory is a highly debated
-    topic. Generally, on Linux, programs do not have the ability to handle this
-    situation themselves, and the operating system may forcibly terminate any
-    process, not necessarily the one who exhausted the memory. On Windows
-    allocation of memory will fail and it is up to the program to cope with
-    this. Most programs will either misbehave and crash, or simply terminate.
+[^OOM]: What should happen when the system runs out of memory is a highly
+    debated topic. Generally, on Linux, programs do not have the ability to
+    handle this situation themselves, and the operating system may forcibly
+    terminate any process, not necessarily the one who exhausted the memory. On
+    Windows allocation of memory will fail and it is up to the program to cope
+    with this. Most programs will either misbehave and crash, or simply
+    terminate.
 
 In some languages, such as C, it is the responsibility of the programmer to
 release unused chunks of memory explicitly. Since this is generally cumbersome
@@ -56,9 +57,9 @@ Consider the small R program below. It creates a data frame with two columns
 (one with values ranging from 1 to 10, the other full of random numbers) and
 assigns it to the variable `x`. It then takes the `data` column, multiplies it
 by 2 and assigns it back into `x`. This creates a new data frame, whose `data`
-is the result of the multiplication[^2].
+is the result of the multiplication[^copy-opt].
 
-[^2]: In this simplified example, R actually optimizes the assignment to
+[^copy-opt]: In this simplified example, R actually optimizes the assignment to
     `x$data` and modifies the data frame in place. This is only allowed in a
     limited set of circumstances and is semantically *as-if* it had made a
     copy.
@@ -71,9 +72,7 @@ x$data <- x$data * 2
 We can represent the abstract state of the memory after executing these two
 lines of code as a graph of variables and objects.
 
-<p align="center">
 <img src="fig.svg" width="400"/>
-</p>
 
 The `x` variable on the left points to the new data frame created by the
 modification. Meanwhile, nothing points to the old data frame at the top (the
@@ -89,16 +88,16 @@ aren't. It does so by traversing the memory, starting at the local variables
 (here `x`), and following all the arrows until it runs out of objects to
 visit.  After it does that, any object it hasn't visited (in red on the graph)
 must be unreachable and can be deallocated. This process is commonly referred
-to as *tracing* or *mark-and-sweep*[^3].
+to as *tracing* or *mark-and-sweep*[^refcount].
 
-[^3]: There are other garbage collection techniques used in other languages.
-    The most common other one is reference counting, as used in Python for
-    example.
+[^refcount]: There are other garbage collection techniques used in other
+    languages.  The most common other one is reference counting, as used in
+    Python for example.
 
 In real programs, with millions of objects, traversing the entire memory can be
 slow, and deciding how frequently to do it is a tradeoff between time spent on
 garbage collection and the amount the garbage that temporarily accumulates. The
-more often the garbage collector runs the less garbage piles up and the less
+more often the garbage collector runs, the less garbage piles up and the less
 memory is wasted, but the more time we spend collection garbage in total.
 
 ### Generational garbage collection
@@ -106,16 +105,16 @@ memory is wasted, but the more time we spend collection garbage in total.
 Garbage collection plays a critical part of language design, and extensive
 research has gone into trying to optimize this process and making garbage
 collection more efficient. One empirical result of this research is the
-"generational hypothesis": *most objects die young[^4]*. This makes intuitive
+"generational hypothesis": *most objects die young[^genhypo]*. This makes intuitive
 sense: as programs make calculations, they produce a lot of intermediate
 results that are only needed for a few more operations and then become garbage.
 Think for example of the vector that was returned by `runif` in the earlier
 example. This means most of the garbage will be comprised of relatively young
 objects.
 
-[^4]: Not all programs conform to this pattern. The litterature contains many
-    alternative models for object lifetimes, often with fanciful names such as
-    the *radioactive decay model* or the *bathtub model*.
+[^genhypo]: Not all programs conform to this pattern. The litterature contains
+    many alternative models for object lifetimes, often with fanciful names
+    such as the *radioactive decay model* or the *bathtub model*.
 
 Generational garbage collectors exploit this fact by dividing objects into
 separate generations. The younger generations are traced frequently to avoid
@@ -123,15 +122,15 @@ accumulating a lot of garbage. The older generations may also contain garbage
 (eg. a long lasting object finally became unreachable) but this happens
 relatively infrequently, therefore we can get away with tracing those
 generations more infrequently. When objects survive multiple rounds of garbage
-collection, they are moved from a young generation to an older one.[^5]
+collection, they are moved from a young generation to an older one.[^write-barrier]
 
-[^5]: This description glosses over an important point: the write barrier. If a
-    young generation object is only reachable from an old generation object, we
-    would miss it when tracing the young generation only. I could not find much
-    documentation about R's write barrier other than [one pretty superficial
-    description][luke-barrier]. It is widely documented in the context of other
-    languages that have a similar garbage collector, [such as
-    Ruby][ruby-gc-write-barrier].
+[^write-barrier]: This description glosses over an important point: the write
+    barrier. If a young generation object is only reachable from an old
+    generation object, we would miss it when tracing the young generation only.
+    I could not find much documentation about R's write barrier other than [one
+    pretty superficial description][luke-barrier]. It is widely documented in
+    the context of other languages that have a similar garbage collector, [such
+    as Ruby][ruby-gc-write-barrier].
 
 By following this principle, generational garbage collectors are able to reduce
 the amount of tracing needed while minimizing the additional garbage overhead.
@@ -149,6 +148,8 @@ malariasimulation.
 
 Lets recap our original issue with malariasimulation: looking at profiles of
 where execution time is spent, about 20% of it is in the garbage collector.
+When capturing the same profiles inside of RStudio, the number is closer to
+30%.
 
 Sampling profilers work by interrupting the process at regular intervals and
 recording what the program was doing at the time. They are inherently
@@ -266,14 +267,33 @@ Clearly the assumption that a level-2 collection cycle *only* happens after
 performing about 100 level-0 cycles is wrong. Something is causing these
 collections to happen much more frequently than that.
 
+We can gather a better view of the problem by plotting all the garbage
+collection events over time. R does not produce that information is a form that
+is directly consumable, and instead prints it to the console. We can work
+around that by running the simulation in a subprocess (using [the `callr`
+package][callr]) and do some regex work to extract the data. This gives us the
+plot below:
+
+<img src="gcinfo.png" width="680"/>
+
+Each dot here represents a garbage collection cycle, and the color of it
+represents the level of garbage collection. The Y axis is the amount of vector
+memory used by the program, after the garbage collection took place. The main
+take away here is that it looks like a mess! Clearly, throughout the entire the
+simulation, our program spends so much time on level 2 garbage collections.
+
 To learn more about what might be going on, we need to dive into the relevant
-chapter of [R Internals manual][R-ints-the-write-barrier], named *the write
-barrier and the garbage collector*. There we can read what we already knew,
-*"after 20 level-0 collections the next collection is at level 1, and after 5
-level-1 collections at level 2.* However, this is completed by a second phrase:
-*"Further, if a level-n collection fails to provide 20% free space (for each of
-nodes and the vector heap), the next collection will be at level n+1."* Looks
-like we might be on to something at last!
+chapter of [R Internals manual][R-ints-the-write-barrier], named The write
+barrier and the garbage collector[^cslewis]. There we can read what we already knew:
+> after 20 level-0 collections the next collection is at level 1, and after 5
+> level-1 collections at level 2.
+
+[^cslewis]: Sadly, not a C.S. Lewis novel.
+
+However, this is completed by a second phrase:
+> Further, if a level-n collection fails to provide 20% free space (for each of
+> nodes and the vector heap), the next collection will be at level n+1.
+Looks like we might be on to something at last!
 
 It seems as though the R garbage collector tries its best to provide "breathing
 room" for the program, by doing its best to ensure at least 20% of the heap is
@@ -380,3 +400,4 @@ Let's recap what we found at this point:
 [RunGenCollect-2]: https://github.com/wch/r-source/blob/ebc07970c75bb6629691ca0afbdbd315991e7e5a/src/main/memory.c#L1996-L2001
 [luke-barrier]: https://homepage.stat.uiowa.edu/~luke/R/barrier.html
 [ruby-gc-write-barrier]: https://blog.peterzhu.ca/notes-on-ruby-gc/#write-barrier
+[callr]: https://callr.r-lib.org/

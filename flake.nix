@@ -53,6 +53,7 @@
           pkgs.rPackages.proffer
           pkgs.rPackages.zoo
           pkgs.rPackages.bench
+          pkgs.rPackages.svglite
           pkgs.pandoc
           pkgs.pprof
           pkgs.gperftools
