@@ -214,54 +214,56 @@ each collection cycle.
 
 ```R
 gcinfo(TRUE)
-run_simulation(500, parameters)
+source("gctime.R")
 ```
 
 This prints a lot of information, but the last group of lines has all we need:
 ```
-Garbage collection 1396 = 1068+122+206 (level 2) ...
+Garbage collection 3306 = 2388+410+508 (level 2) ...
 29.2 Mbytes of cons cells used (51%)
-110.5 Mbytes of vectors used (70%)
+122.0 Mbytes of vectors used (73%)
 ```
 
-That's 1396 garbage collection cycles in total. Now lets run the same in RStudio to compare:
+That's 3306 garbage collection cycles in total. R also print our memory usage,
+broken down into "cons cells", which mostly represent code, and vectors, which
+represent data. Now lets run the same in RStudio to compare:
 
 ```
-Garbage collection 1016 = 741+181+94 (level 2) ... 
-43.0 Mbytes of cons cells used (58%)
-153.0 Mbytes of vectors used (75%)
+Garbage collection 2542 = 1558+483+501 (level 0) ... 
+40.1 Mbytes of cons cells used (63%)
+150.7 Mbytes of vectors used (98%)
 ```
 
-The result is actually quite surprising, running in RStudio results in fewer
-garbage collection cycles, even though, as we've seen earlier, it spends more
-time in total. This suggests that in RStudio, for some reason, each cycle takes
-longer.
+The result is actually quite surprising, running in RStudio results in slightly
+fewer garbage collection cycles (2542), even though, as we've seen earlier, it
+spends more time in total. This suggests that in RStudio, for some reason, each
+cycle takes longer than on the command line.
 
 I looked through the RStudio code base for any flags and options it might be
 passing to the interpreter but couldn't find anything. The only thing
 noteworthy is that RStudio loads a lot of code into the R session and uses it
-to interact with the interpreter. This would explain the increased memory usage
-between the two environments.
+to interact with the interpreter. This would also explain the increased memory
+usage between the two environments, in particular the cons cells.
 
 Regardless of the difference between the two, the GC information also prints
 the break down of how many cycles were done at each level. When running in the
-command-line, 1068 cycles were at level 0, 122 at level 1 and 206 at level 2.
-Immediately this feels very wrong: there's only a factor of about 5 between
-levels 0 and 2, when, according to the R interpreter' source code, it should be
-about 100. It therefore seems like there is something going on that is causing
-too many collections at level 2. Remember that collections at that level will
-traverse the entire programs memory, and therefore can be very time consuming.
+command-line, 2388 cycles were at level 0, 410 cycles at level 1 and 508 at
+level 2.  Immediately this feels very wrong: there's only a factor of about 5
+between levels 0 and 2, when, according to the R documentation, it should be
+about 100. Something must going be going on that is causing too many
+collections at level 2. Remember that collections at that level will traverse
+the entire program's memory, and therefore can be very time consuming.
 
-This also explains the difference in behaviour between running in RStudio and
+This also explains the difference in performing between running in RStudio and
 the command line: when starting up, RStudio loads some code into the
 interpreter, this code takes up space in memory. While that memory is
-long-lived and is very quickly primoted to the oldest generation, because we do
+long-lived and is very quickly promoted to the oldest generation, because we do
 execute a lot of level-2 garbage collection cycles, we end up wasting a lot of
 time tracing through that extra code.
 
 Clearly the assumption that a level-2 collection cycle *only* happens after
-performing 100 level-0 cycles is wrong. Something is causing these collections
-to happen much more frequently than that.
+performing about 100 level-0 cycles is wrong. Something is causing these
+collections to happen much more frequently than that.
 
 To learn more about what might be going on, we need to dive into the relevant
 chapter of [R Internals manual][R-ints-the-write-barrier], named *the write
