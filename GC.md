@@ -217,7 +217,8 @@ gcinfo(TRUE)
 source("gctime.R")
 ```
 
-This prints a lot of information, but the last group of lines has all we need:
+For each garbage collection cycle, R prints out a lot of information to the
+console. For now we'll only focus on the last group of lines:
 ```
 Garbage collection 3306 = 2388+410+508 (level 2) ...
 29.2 Mbytes of cons cells used (51%)
