@@ -76,11 +76,12 @@ lines of code as a graph of variables and objects.
 </p>
 
 The `x` variable points to the new data frame at the bottom, while nothing
-points to the old one at the top. We say the old data frame is unreachable, and
-is effectively garbage. It wastes space in the memory but could never be used
-again. Not only that, but there's a whole vector, the original `data` column,
-that is also (indirectly) unreachable. On the other hand, the original index
-vector is still reachable, through the new data frame.
+points to the old one at the top (the old reference to it from `x` is dotted).
+We say the old data frame is unreachable, and is effectively garbage. It
+wastes space in the memory but could never be accessed again. Not only that,
+but there's a whole vector, the original `data` column, that is also
+unreachable. On the other hand, the original index vector is still reachable,
+through the new data frame.
 
 The job of the garbage collector is to carefully figure out which chunks of
 memory are reachable and which one are not, and deallocate the ones which
