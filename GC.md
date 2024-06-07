@@ -214,7 +214,7 @@ each collection cycle.
 
 ```R
 gcinfo(TRUE)
-run_simulation(ticks, parameters)
+run_simulation(500, parameters)
 ```
 
 This prints a lot of information, but the last group of lines has all we need:
