@@ -27,6 +27,7 @@ data_raw <- str_match_all(
   )
 )[[1]][,-1] %>% data.frame()
 
+saveRDS(data_raw, "gcinfo.rds")
 data <- data_raw %>%
   mutate(across(everything(), as.numeric)) %>%
   mutate(across(c(nvectors, ncells), ~ . * 1024*1024)) %>%
