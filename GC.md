@@ -296,8 +296,8 @@ Looks like we might be on to something at last!
 
 [^cslewis]: Sadly, not a C.S. Lewis novel.
 
-It seems as though the R garbage collector tries its best to provide "breathing
-room" for the program, by doing its best to ensure at least 20% of the heap is
+It seems as though the R garbage collector tries to provide "breathing room"
+for the program, by doing its best to ensure at least 20% of the heap is
 available at all times. The manual is not super explicit about what this "free
 space" means. How does R decide what the upper limit is? Unfortunately this is
 the point where we cannot rely on documentation alone are are going to have to
