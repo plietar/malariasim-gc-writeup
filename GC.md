@@ -89,7 +89,11 @@ aren't. It does so by traversing the memory, starting at the local variables
 (here `x`), and following all the arrows until it runs out of objects to
 visit.  After it does that, any object it hasn't visited (in red on the graph)
 must be unreachable and can be deallocated. This process is commonly referred
-to as *tracing* or *mark-and-sweep*.
+to as *tracing* or *mark-and-sweep*[^3].
+
+[^3]: There are other garbage collection techniques used in other languages.
+    The most common other one is reference counting, as used in Python for
+    example.
 
 In real programs, with millions of objects, traversing the entire memory can be
 slow, and deciding how frequently to do it is a tradeoff between time spent on
@@ -102,15 +106,15 @@ memory is wasted, but the more time we spend collection garbage in total.
 Garbage collection plays a critical part of language design, and extensive
 research has gone into trying to optimize this process and making garbage
 collection more efficient. One empirical result of this research is the
-"generational hypothesis": *most objects die young[^3]*. This makes intuitive
+"generational hypothesis": *most objects die young[^4]*. This makes intuitive
 sense: as programs make calculations, they produce a lot of intermediate
 results that are only needed for a few more operations and then become garbage.
 Think for example of the vector that was returned by `runif` in the earlier
 example. This means most of the garbage will be comprised of relatively young
 objects.
 
-[^3]: Not all programs conform to this pattern. The litterature contains many
-    many models of object lifetimes, often with creative names such as the
+[^4]: Not all programs conform to this pattern. The litterature contains many
+    many models of object lifetimes, often with fanciful names such as the
     *radioactive decay model* or the *bathtub model*.
 
 Generational garbage collectors exploit this fact by dividing objects into
@@ -119,9 +123,9 @@ accumulating a lot of garbage. The older generations may also contain garbage
 (eg. a long lasting object finally became unreachable) but this happens
 relatively infrequently, therefore we can get away with tracing those
 generations more infrequently. When objects survive multiple rounds of garbage
-collection, they are moved from a young generation to an older one.[^4]
+collection, they are moved from a young generation to an older one.[^5]
 
-[^4]: This description glosses over an important point: the write barrier. If a
+[^5]: This description glosses over an important point: the write barrier. If a
     young generation object is only reachable from an old generation object, we
     would miss it when tracing the young generation only. I could not find much
     documentation about R's write barrier other than [one pretty superficial
