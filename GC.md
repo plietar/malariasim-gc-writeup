@@ -283,8 +283,8 @@ take away here is that it looks like a mess! Clearly, throughout the entire the
 simulation, our program spends so much time on level 2 garbage collections.
 
 To learn more about what might be going on, we need to dive into the relevant
-chapter of [R Internals manual][R-ints-the-write-barrier], named The write
-barrier and the garbage collector[^cslewis]. There we can read what we already knew:
+chapter of [R Internals manual][R-ints-the-write-barrier], named *The write
+barrier and the garbage collector*[^cslewis]. There we can read what we already knew:
 > after 20 level-0 collections the next collection is at level 1, and after 5
 > level-1 collections at level 2.
 
