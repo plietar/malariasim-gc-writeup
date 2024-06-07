@@ -171,19 +171,22 @@ run_simulation(500, parameters)
 proc_elapsed <- proc.time()[[3]] - proc_start
 gc_elapsed <- gc.time()[[3]] - gc_start
 
-cat(sprintf("GC: %.2fs Total: %.2fs Relative: %.2f%%\n",
-            gc_elapsed, proc_elapsed,
+cat(sprintf("Simulation: %.2fs GC: %.2fs Total: %.2fs Relative: %.2f%%\n",
+            proc_elapsed - gc_elapsed,
+            gc_elapsed,
+            proc_elapsed,
             gc_elapsed / proc_elapsed * 100))
 ```
 
-The `proc.time` and `gc.time` functions both return a vector with the "user",
-"system" and total time. The distinction between these isn't very relevant here
-and we'll use the total time throughout.
+The code above runs the simulation for 500 timesteps (i.e. days), with a human
+population of 1M people. The `proc.time` and `gc.time` functions both return a
+vector with the "user", "system" and total time. The distinction between these
+isn't very relevant here and we'll use the total time throughout.
 
 We can run the script on the command line and see the results:
 ```
 $ Rscript gctime.R
-GC: 6.80s Total: 32.66s Relative: 20.83%`
+Simulation: 55.22s GC: 17.03s Total: 72.25s Relative: 23.57%
 ```
 
 That pretty much confirms our observations from running under the profiler, and
@@ -191,24 +194,27 @@ will serve as a good way to experiment further. We also noticed previously that
 when running the profiler inside of RStudio the effect was even worse. Let's
 run our script and confirm that as well:
 ```
-GC: 12.29s Total: 38.38s Relative: 32.01%
+> source("gctime.R")
+Simulation: 54.68s GC: 23.88s Total: 78.57s Relative: 30.40%
 ```
 
-Again, this confirms our previous observations. The increase in the total time
-is roughly equal to the increase in the GC time. This means our model is
-generally not running any slower in RStudio than in the command-line, instead
-it is the garbage collector which takes more time.
+Again, this confirms our previous observations. Only the GC time increases in
+any significant way, not the time spent on the actual simulation. This means
+our model is generally not running any slower in RStudio than in the
+command-line, instead it is only the garbage collector which takes more time.
 
 Since garbage collection time is the sum of many small collection cycles, if
 total collection time increases then either the garbage collection is more
 frequent in RStudio or each collection cycle takes more time (or a combination
 of both).
 
-To figure out which it is, we can call the `gcinfo(TRUE)` before starting the
-simulation. When this flag is set, R will print information on each collection
-cycle.
-```
-include gcinfo.R
+To figure out which it is, we can call the `gcinfo(TRUE)` function before
+starting the simulation. When this flag is set, R will print information on
+each collection cycle.
+
+```R
+gcinfo(TRUE)
+run_simulation(ticks, parameters)
 ```
 
 This prints a lot of information, but the last group of lines has all we need:

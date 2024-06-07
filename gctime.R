@@ -10,6 +10,8 @@ run_simulation(500, parameters)
 proc_elapsed <- proc.time()[[3]] - proc_start
 gc_elapsed <- gc.time()[[3]] - gc_start
 
-cat(sprintf("GC: %.2fs Total: %.2fs Relative: %.2f%%\n",
-            gc_elapsed, proc_elapsed,
+cat(sprintf("Simulation: %.2fs GC: %.2fs Total: %.2fs Relative: %.2f%%\n",
+            proc_elapsed - gc_elapsed,
+            gc_elapsed,
+            proc_elapsed,
             gc_elapsed / proc_elapsed * 100))

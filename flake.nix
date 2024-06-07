@@ -58,7 +58,6 @@
           pkgs.gperftools
           pkgs.pdf2svg
           pkgs.texlive.combined.scheme-full
-          pkgs.nodejs
         ];
       };
     };
