@@ -1,0 +1,12 @@
+diff --git a/src/main/memory.c b/src/main/memory.c
+index 30d6623cd8..036bbbe3d7 100644
+--- a/src/main/memory.c
++++ b/src/main/memory.c
+@@ -3197,6 +3197,7 @@ static void R_gc_internal(R_size_t size_needed)
+ 	vcells = 0.1*ceil(10*vcells * vsfac/Mega);
+ 	REprintf("%.1f Mbytes of vectors used (%d%%)\n",
+ 		 vcells, (int) (vfrac + 0.5));
++  REprintf("R_VSize=%ld VHEAP_FREE=%ld\n", R_VSize, VHEAP_FREE());
+     }
+ 
+ #ifdef IMMEDIATE_FINALIZERS

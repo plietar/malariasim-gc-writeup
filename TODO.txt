@@ -1,0 +1,2 @@
+Investigate initial_immunity slowness
+  -> Can it be vectorized
