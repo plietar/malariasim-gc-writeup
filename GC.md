@@ -75,21 +75,21 @@ lines of code as a graph of variables and objects.
 <img src="fig.svg" width="400"/>
 </p>
 
-The `x` variable points to the new data frame at the bottom, while nothing
-points to the old one at the top (the old reference to it from `x` is dotted).
-We say the old data frame is unreachable, and is effectively garbage. It
-wastes space in the memory but could never be accessed again. Not only that,
-but there's a whole vector, the original `data` column, that is also
-unreachable. On the other hand, the original index vector is still reachable,
-through the new data frame.
+The `x` variable on the left points to the new data frame created by the
+modification. Meanwhile, nothing points to the old data frame at the top (the
+old reference to it from `x` is dotted). We say the old data frame is
+unreachable, and is effectively garbage. It wastes space in the memory but
+could never be accessed again. Not only that, but there's a whole vector, the
+original `data` column, that is also unreachable. On the other hand, the
+original index vector is still reachable, through the new data frame.
 
 The job of the garbage collector is to carefully figure out which chunks of
 memory are reachable and which one are not, and deallocate the ones which
 aren't. It does so by traversing the memory, starting at the local variables
-(here `x`), and following all the arrows until it runs out of objects to visit.
-After it does that, any object it hasn't visited must be unreachable and gets
-deallocated. This process is commonly referred to as *tracing* or
-*mark-and-sweep*.
+(here `x`), and following all the arrows until it runs out of objects to
+visit.  After it does that, any object it hasn't visited (in red on the graph)
+must be unreachable and can be deallocated. This process is commonly referred
+to as *tracing* or *mark-and-sweep*.
 
 In real programs, with millions of objects, traversing the entire memory can be
 slow, and deciding how frequently to do it is a tradeoff between time spent on
