@@ -236,10 +236,10 @@ Garbage collection 2542 = 1558+483+501 (level 0) ...
 150.7 Mbytes of vectors used (98%)
 ```
 
-The result is actually quite surprising, running in RStudio results in slightly
-fewer garbage collection cycles (2542), even though, as we've seen earlier, it
-spends more time in total. This suggests that in RStudio, for some reason, each
-cycle takes longer than on the command line.
+The result is actually quite surprising, running in RStudio results in fewer
+garbage collection cycles (2542), even though, as we've seen earlier, it spends
+more time in total. This suggests that in RStudio, for some reason, each cycle
+takes longer than on the command line.
 
 I looked through the RStudio code base for any flags and options it might be
 passing to the interpreter but couldn't find anything. The only thing
