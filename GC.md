@@ -294,7 +294,7 @@ However, this is completed by a second phrase:
 
 Looks like we might be on to something at last!
 
-[^cslewis]: Sadly, not a C.S. Lewis novel.
+[^cslewis]: Sadly, not a C. S. Lewis novel.
 
 It seems as though the R garbage collector tries to provide "breathing room"
 for the program, by doing its best to ensure at least 20% of the heap is
@@ -303,13 +303,14 @@ space" means. How does R decide what the upper limit is? Unfortunately this is
 the point where we cannot rely on documentation alone are are going to have to
 dig into the source code of the R garbage collector.
 
-Most of the GC is implemented in the `src/main/memory.c` file. Around the top
-of the file, we find a constant [`R_MinFreeFrac = 0.2`][R_MinFreeFrac] which
-sounds a lot like the 20% mentioned in the internals manual. We can follow the
-uses of that constant into the end of the [`RunGenCollect`][RunGenCollect-1]
-function, which is the heart of the garbage collector. In there we find the
-line of code responsible for raising the garbage collection level. With a bit
-of simplification, that code is as follows:
+Most of the GC is implemented in the [`src/main/memory.c`][memory.c] file.
+Around the top of the file, we find a constant
+[`R_MinFreeFrac=0.2`][R_MinFreeFrac] which sounds a lot like the 20% mentioned
+in the internals manual. We can follow the uses of that constant into the end
+of the [`RunGenCollect`][RunGenCollect-1] function, which is the heart of the
+garbage collector. In there we find the line of code responsible for raising
+the garbage collection level. With a bit of simplification, that code is as
+follows:
 
 ```c
 if (R_VSize - R_LargeVallocSize - R_SmallVallocSize < size_needed + R_MinFreeFrac * R_VSize) {
@@ -396,6 +397,7 @@ Let's recap what we found at this point:
 [individual#189]: https://github.com/mrc-ide/individual/pull/189
 [individual#190]: https://github.com/mrc-ide/individual/pull/190
 [R-ints-the-write-barrier]: https://cran.r-project.org/doc/manuals/r-release/R-ints.html#The-write-barrier
+[memory.c]: https://github.com/wch/r-source/blob/ebc07970c75bb6629691ca0afbdbd315991e7e5a/src/main/memory.c
 [R_MinFreeFrac]: https://github.com/wch/r-source/blob/ebc07970c75bb6629691ca0afbdbd315991e7e5a/src/main/memory.c#L289-L296
 [RunGenCollect-1]: https://github.com/wch/r-source/blob/ebc07970c75bb6629691ca0afbdbd315991e7e5a/src/main/memory.c#L1983-L1991
 [RunGenCollect-2]: https://github.com/wch/r-source/blob/ebc07970c75bb6629691ca0afbdbd315991e7e5a/src/main/memory.c#L1996-L2001
