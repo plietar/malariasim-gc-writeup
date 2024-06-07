@@ -288,12 +288,13 @@ barrier and the garbage collector*[^cslewis]. There we can read what we already 
 > after 20 level-0 collections the next collection is at level 1, and after 5
 > level-1 collections at level 2.
 
-[^cslewis]: Sadly, not a C.S. Lewis novel.
-
 However, this is completed by a second phrase:
 > Further, if a level-n collection fails to provide 20% free space (for each of
 > nodes and the vector heap), the next collection will be at level n+1.
+
 Looks like we might be on to something at last!
+
+[^cslewis]: Sadly, not a C.S. Lewis novel.
 
 It seems as though the R garbage collector tries its best to provide "breathing
 room" for the program, by doing its best to ensure at least 20% of the heap is
