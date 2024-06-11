@@ -1,8 +1,37 @@
 diff --git a/src/main/memory.c b/src/main/memory.c
-index 30d6623cd8..036bbbe3d7 100644
+index 30d6623cd8..d9d4a31615 100644
 --- a/src/main/memory.c
 +++ b/src/main/memory.c
-@@ -3197,6 +3197,7 @@ static void R_gc_internal(R_size_t size_needed)
+@@ -1962,8 +1962,15 @@ static int RunGenCollect(R_size_t size_needed)
+ 	if (R_Collected < R_MinFreeFrac * R_NSize ||
+ 	    VHEAP_FREE() < size_needed + R_MinFreeFrac * R_VSize) {
+ 	    num_old_gens_to_collect++;
+-	    if (R_Collected <= 0 || VHEAP_FREE() < size_needed)
++	    if (R_Collected <= 0 || VHEAP_FREE() < size_needed) {
++                REprintf("event=gcagain level=%d R_Collected=%ld size_needed=%ld R_VSize=%ld VHEAP_FREE=%ld\n",
++                        num_old_gens_to_collect,
++                        R_Collected,
++                        size_needed,
++                        R_VSize,
++                        VHEAP_FREE());
+ 		goto again;
++            }
+ 	}
+ 	else num_old_gens_to_collect = 0;
+     }
+@@ -3121,8 +3128,10 @@ static void R_gc_internal(R_size_t size_needed)
+ 	R_NSize = R_NodesInUse + 1;
+ 
+       if (num_old_gens_to_collect < NUM_OLD_GENERATIONS &&
+-	  VHEAP_FREE() < size_needed + R_MinFreeFrac * R_VSize)
++	  VHEAP_FREE() < size_needed + R_MinFreeFrac * R_VSize) {
++        REprintf("event=gcdisabled size_needed=%ld R_VSize=%ld VHEAP_FREE=%ld\n", size_needed, R_VSize, VHEAP_FREE());
+ 	num_old_gens_to_collect++;
++      }
+ 
+       if (size_needed > VHEAP_FREE()) {
+ 	  R_size_t expand = size_needed - VHEAP_FREE();
+@@ -3197,6 +3206,7 @@ static void R_gc_internal(R_size_t size_needed)
  	vcells = 0.1*ceil(10*vcells * vsfac/Mega);
  	REprintf("%.1f Mbytes of vectors used (%d%%)\n",
  		 vcells, (int) (vfrac + 0.5));
