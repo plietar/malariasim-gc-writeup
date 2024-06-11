@@ -374,8 +374,8 @@ sequence and miss the fact that an earlier collection could have happened.
 Again, lets modify the R interpreter to print those cases and include them in
 the graphs. To distinguish between a collection which freed up enough space to
 satisfy the current allocation and those which haven't and need to be retried,
-a different point shape is used. I'll also focus the plot to a shorter period
-of time.
+a different point shape is used. I've also focused the plot to a shorter period
+of time, so we can actually see the individual cycles.
 
 <p align="center">
 <img src="gcinfo-line2.png" width="800"/>

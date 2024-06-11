@@ -78,4 +78,4 @@ ggplot(gcdata %>% filter(n >= 1000 & n < 1050), aes(n)) +
   guides(linetype = guide_legend(order=1),
          colour = guide_legend(order=2),
          shape = guide_legend(order=3))
-ggsave("gcinfo-line2.png", width=20, scale=0.5)
+ggsave("gcinfo-line2.png", width=20, scale=0.7)
