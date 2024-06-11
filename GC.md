@@ -33,7 +33,7 @@ allocated, the chunk cannot be used for another purpose.
 
 Unfortunately, computers only have a finite amount of memory, therefore if the
 program were to allocate chunks of memory forever it would quickly run out and
-terminate[^OOM]. For this reason, it is important that programs de-allocate chunks
+terminate[^OOM]. For this reason, it is important that programs deallocate chunks
 they do not use anymore. Once a chunk has been deallocated, it can be re-used
 for another purpose.
 
@@ -85,7 +85,7 @@ original `data` column, that is also unreachable. On the other hand, the
 original index vector is still reachable, through the new data frame.
 
 The job of the garbage collector is to carefully figure out which chunks of
-memory are reachable and which one are not, and deallocate the ones which
+memory are reachable and which ones are not, and deallocate the ones which
 aren't. It does so by traversing the memory, starting at the local variables
 (here `x`), and following all the arrows until it runs out of objects to
 visit.  After it does that, any object it hasn't visited (in red on the graph)
@@ -104,15 +104,15 @@ memory is wasted, but the more time we spend collection garbage in total.
 
 ### Generational garbage collection
 
-Garbage collection plays a critical part of language design, and extensive
+Garbage collection is a critical part of language design, and extensive
 research has gone into trying to optimize this process and making garbage
 collection more efficient. One empirical result of this research is the
-"generational hypothesis": *most objects die young[^genhypo]*. This makes intuitive
-sense: as programs make calculations, they produce a lot of intermediate
-results that are only needed for a few more operations and then become garbage.
-Think for example of the vector that was returned by `runif` in the earlier
-example. This means most of the garbage will be comprised of relatively young
-objects.
+"generational hypothesis": *most objects die young[^genhypo]*. This makes
+intuitive sense: as programs make calculations, they produce a lot of
+intermediate results that are only needed for a few more operations and then
+become garbage.  Think for example of the vector that was returned by `runif`
+in the earlier example. This means most of the garbage will be comprised of
+relatively young objects.
 
 [^genhypo]: Not all programs conform to this pattern. The litterature contains
     many alternative models for object lifetimes, often with fanciful names
@@ -186,11 +186,17 @@ population of 1M people. The `proc.time` and `gc.time` functions both return a
 vector with the "user", "system" and total time. The distinction between these
 isn't very relevant here and we'll use the total time throughout.
 
-We can run the script on the command line and see the results:
+We can run the script on the command line and see the results[^numberscaveats]:
 ```
 $ Rscript gctime.R
 Simulation: 55.22s GC: 17.03s Total: 72.25s Relative: 23.57%
 ```
+
+[^numberscaveats]: The absolute numbers listed here need to be taken with a
+    pinch of salt. They are the result of a single run, on a laptop whose CPU
+    is subject to dynamic frequency scaling, and with other noisy programs
+    running alongside. The general trends are nevertheless consistent and
+    repeatable.
 
 That pretty much confirms our observations from running under the profiler, and
 will serve as a good way to experiment further. We also noticed previously that
@@ -287,7 +293,7 @@ take away here is that it looks like a mess! Clearly, throughout the entire the
 simulation, our program spends so much time on level 2 garbage collections.
 
 To learn more about what might be going on, we need to dive into the relevant
-chapter of [R Internals manual][R-ints-the-write-barrier], named *The write
+section of [R Internals manual][R-ints-the-write-barrier], named *The write
 barrier and the garbage collector*[^cslewis]. There we can read what we already knew:
 > After 20 level-0 collections the next collection is at level 1, and after 5
 > level-1 collections at level 2.
