@@ -215,11 +215,9 @@ command-line, instead it is only the garbage collector which takes more time.
 Since garbage collection time is the sum of many small collection cycles, if
 total collection time increases then either the garbage collection is more
 frequent in RStudio or each collection cycle takes more time (or a combination
-of both).
-
-To figure out which it is, we can call the `gcinfo(TRUE)` function before
-starting the simulation. When this flag is set, R will print information on
-each collection cycle.
+of both). To figure out which it is, we can call the `gcinfo(TRUE)` function
+before starting the simulation. When this flag is set, R will print information
+on each collection cycle.
 
 ```R
 gcinfo(TRUE)
@@ -264,7 +262,7 @@ about 100. Something must going be going on that is causing too many
 collections at level 2. Remember that collections at that level will traverse
 the entire program's memory, and therefore can be very time consuming.
 
-This also explains the difference in performing between running in RStudio and
+This also explains the difference in performance between running in RStudio and
 the command line: when starting up, RStudio loads some code into the
 interpreter, this code takes up space in memory. While that memory is
 long-lived and is very quickly promoted to the oldest generation, because we do
@@ -276,11 +274,11 @@ performing about 100 level-0 cycles is wrong. Something is causing these
 collections to happen much more frequently than that.
 
 We can gather a better view of the problem by plotting all the garbage
-collection events over time. R does not produce that information is a form that
-is directly consumable, and instead prints it to the console. We can work
+collection events over time. R does not produce that information is a form
+that is directly consumable, and instead prints it to the console. We can work
 around that by running the simulation in a subprocess (using [the `callr`
-package][callr]) and do some regex work to extract the data. This gives us the
-plot below:
+package][callr]) and do [some regex work][gcinfo-regex] to extract the data.
+This gives us the plot below:
 
 <p align="center">
 <img src="gcinfo.png" width="800"/>
@@ -432,3 +430,4 @@ Let's recap what we found at this point:
 [ruby-gc-write-barrier]: https://blog.peterzhu.ca/notes-on-ruby-gc/#write-barrier
 [callr]: https://callr.r-lib.org/
 [r-source.diff]: r-source.diff
+[gcinfo-regex]: gcinfo-data.R##L20-L28
