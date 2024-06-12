@@ -1,7 +1,12 @@
+# I wonder what the blog post title should be.
+'The Case of the Overworked Garbage Collector'
+
+## nice to have - a 'contents' list so you can skip over the primer if you already know about garbage collection
+
 ## Introduction
 
 Recently I have been doing a lot of performance improvement work on
-malariasimulation, a transmission model for malaria developed in the
+[malariasimulation](https://github.com/mrc-ide/malariasimulation), a transmission model for malaria developed in the
 department.
 
 The general process to speed up the model involves running the simulation under
@@ -15,7 +20,7 @@ After I'd found and fixed most of the low hanging fruits, I found myself with
 profiles where a significant amount of the time was spent in the R language
 runtime, doing garbage collection. While R may have a vague reputation of being
 slow, spending 20% of time in garbage collection seemed excessive. Even
-stanger, when collecting profiles inside of RStudio (instead of on the
+stranger, when collecting profiles inside of RStudio (instead of on the
 command-line, through `Rscript`), the garbage collection time was closer to
 30%. The time spent not in garbage collection on the other hand was roughly
 constant.
@@ -76,8 +81,8 @@ lines of code as a graph of variables and objects.
 <img src="fig.svg" width="400"/>
 </p>
 
-The `x` variable on the left points to the new data frame created by the
-modification. Meanwhile, nothing points to the old data frame at the top (the
+The `x` variable on the left now [points](https://en.wikipedia.org/wiki/Pointer_(computer_programming)) to the new data frame created by the
+modification. Meanwhile, nothing points to the old data frame at the top any more (the
 old reference to it from `x` is dotted). We say the old data frame is
 unreachable, and is effectively garbage. It wastes space in the memory but
 could never be accessed again. Not only that, but there's a whole vector, the
@@ -98,9 +103,9 @@ to as *tracing* or *mark-and-sweep*[^refcount].
 
 In real programs, with millions of objects, traversing the entire memory can be
 slow, and deciding how frequently to do it is a tradeoff between time spent on
-garbage collection and the amount the garbage that temporarily accumulates. The
+garbage collection and the amount of garbage that temporarily accumulates. The
 more often the garbage collector runs, the less garbage piles up and the less
-memory is wasted, but the more time we spend collection garbage in total.
+memory is wasted, but the more time we spend on garbage collection in total.
 
 ### Generational garbage collection
 
@@ -114,16 +119,16 @@ become garbage.  Think for example of the vector that was returned by `runif`
 in the earlier example. This means most of the garbage will be comprised of
 relatively young objects.
 
-[^genhypo]: Not all programs conform to this pattern. The litterature contains
+[^genhypo]: Not all programs conform to this pattern. The literature contains
     many alternative models for object lifetimes, often with fanciful names
     such as the *radioactive decay model* or the *bathtub model*.
 
 Generational garbage collectors exploit this fact by dividing objects into
 separate generations. The younger generations are traced frequently to avoid
 accumulating a lot of garbage. The older generations may also contain garbage
-(eg. a long lasting object finally became unreachable) but this happens
-relatively infrequently, therefore we can get away with tracing those
-generations more infrequently. When objects survive multiple rounds of garbage
+(if eg. a long-lasting object finally becomes unreachable) but, since this happens
+relatively infrequently, we can get away with tracing those
+generations less often. When objects survive multiple rounds of garbage
 collection, they are moved from a young generation to an older one.[^write-barrier]
 
 [^write-barrier]: This description glosses over an important point: the write
@@ -151,7 +156,7 @@ malariasimulation.
 Lets recap our original issue with malariasimulation: looking at profiles of
 where execution time is spent, about 20% of it is in the garbage collector.
 When capturing the same profiles inside of RStudio, the number is closer to
-30%.
+30%. These numbers are suspiciously high.
 
 Sampling profilers work by interrupting the process at regular intervals and
 recording what the program was doing at the time. They are inherently
@@ -200,7 +205,7 @@ Simulation: 55.22s GC: 17.03s Total: 72.25s Relative: 23.57%
 
 That pretty much confirms our observations from running under the profiler, and
 will serve as a good way to experiment further. We also noticed previously that
-when running the profiler inside of RStudio the effect was even worse. Let's
+when running the profiler inside of RStudio the situation was even worse. Let's
 run our script and confirm that as well:
 ```
 > source("gctime.R")
@@ -232,7 +237,7 @@ Garbage collection 3306 = 2388+410+508 (level 2) ...
 122.0 Mbytes of vectors used (73%)
 ```
 
-That's 3306 garbage collection cycles in total. R also print our memory usage,
+That's 3306 garbage collection cycles in total. R also prints our memory usage,
 broken down into "cons cells", which mostly represent code, and vectors, which
 represent data. Now lets run the same in RStudio to compare:
 
@@ -249,13 +254,13 @@ takes longer than on the command line.
 
 I looked through the RStudio code base for any flags and options it might be
 passing to the interpreter but couldn't find anything. The only thing
-noteworthy is that RStudio loads a lot of code into the R session and uses it
+worthy of note is that RStudio loads a lot of code into the R session and uses it
 to interact with the interpreter. This would also explain the increased memory
 usage between the two environments, in particular the cons cells.
 
 Regardless of the difference between the two, the GC information also prints
-the break down of how many cycles were done at each level. When running in the
-command-line, 2388 cycles were at level 0, 410 cycles at level 1 and 508 at
+the breakdown of how many cycles were done at each level. When running in the
+command line, 2388 cycles were at level 0, 410 cycles at level 1 and 508 at
 level 2.  Immediately this feels very wrong: there's only a factor of about 5
 between levels 0 and 2, when, according to the R documentation, it should be
 about 100. Something must going be going on that is causing too many
@@ -264,7 +269,7 @@ the entire program's memory, and therefore can be very time consuming.
 
 This also explains the difference in performance between running in RStudio and
 the command line: when starting up, RStudio loads some code into the
-interpreter, this code takes up space in memory. While that memory is
+interpreter, and this code takes up space in memory. While that memory is
 long-lived and is very quickly promoted to the oldest generation, because we do
 execute a lot of level-2 garbage collection cycles, we end up wasting a lot of
 time tracing through that extra code.
@@ -286,12 +291,12 @@ This gives us the plot below:
 
 Each dot here represents a garbage collection cycle, and the color of it
 represents the level of garbage collection. The Y axis is the amount of vector
-memory used by the program, after the garbage collection took place. The main
+memory used by the program, after the garbage collection takes place. The main
 take away here is that it looks like a mess! Clearly, throughout the entire the
-simulation, our program spends so much time on level 2 garbage collections.
+simulation, our program spends too much time on level 2 garbage collections.
 
 To learn more about what might be going on, we need to dive into the relevant
-section of [R Internals manual][R-ints-the-write-barrier], named *The write
+section of the [R Internals manual][R-ints-the-write-barrier], named *The write
 barrier and the garbage collector*[^cslewis]. There we can read what we already knew:
 > After 20 level-0 collections the next collection is at level 1, and after 5
 > level-1 collections at level 2.
@@ -308,7 +313,7 @@ It seems as though the R garbage collector tries to provide "breathing room"
 for the program, by doing its best to ensure at least 20% of the heap is
 available at all times. The manual is not super explicit about what this "free
 space" means. How does R decide what the upper limit is? Unfortunately this is
-the point where we cannot rely on documentation alone are are going to have to
+the point where we cannot rely on documentation alone. We are going to have to
 dig into the source code of the R garbage collector.
 
 Most of the GC is implemented in the [`src/main/memory.c`][memory.c] file.
@@ -387,7 +392,7 @@ of time, so we can actually see the individual cycles.
 ----
 ----
 
-This is where things stop making sense
+This is where things stop making sense.
 
 It seems surprising that the garbage collector would allow us to repeatedly hit
 the 80% threshold and not do anything about it. Indeed, if we look back at the
